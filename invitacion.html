@@ -28,7 +28,7 @@
         /* IMAGEN DE FONDO CORREGIDA - URL CONSISTENTE */
         .cover.with-background {
             background: linear-gradient(rgba(13, 92, 77, 0.4), rgba(10, 74, 61, 0.5)), 
-                        url('https://mjto160.github.io/Graduacion-2025/fondo-graduacion.jpg') center/cover no-repeat fixed !important;
+                        url('https://mjtomy.github.io/GraduacionDT/fondo-graduacion.jpg') center/cover no-repeat fixed !important;
             background-color: #0d5c4d !important;
             min-height: 100vh !important;
             position: relative;
@@ -38,7 +38,7 @@
         @media (max-width: 768px) {
             .cover.with-background {
                 background: linear-gradient(rgba(13, 92, 77, 0.5), rgba(10, 74, 61, 0.6)), 
-                            url('https://mjto160.github.io/Graduacion-2025/fondo-graduacion.jpg') center/cover no-repeat fixed !important;
+                            url('https://mjtomy.github.io/GraduacionDT/fondo-graduacion.jpg') center/cover no-repeat fixed !important;
                 background-attachment: scroll !important;
             }
             
@@ -50,7 +50,7 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: url('https://mjto160.github.io/Graduacion-2025/fondo-graduacion.jpg') center/cover no-repeat;
+                background: url('https://mjtomy.github.io/GraduacionDT/fondo-graduacion.jpg') center/cover no-repeat;
                 z-index: -1;
             }
         }
@@ -58,11 +58,11 @@
 </head>
 <body>
      <!-- AGREGAR PRELOAD DE IMAGEN PARA MÓVIL -->
-     <img src="https://mjto160.github.io/Graduacion-2025/fondo-graduacion.jpg" style="display: none;" alt="preload" id="preloadImage">
+     <img src="https://mjtomy.github.io/GraduacionDT/fondo-graduacion.jpg" style="display: none;" alt="preload" id="preloadImage">
      
      <!-- DEBUG IMAGE -->
     <div style="display: none;">
-        <img src="https://mjto160.github.io/Graduacion-2025/fondo-graduacion.jpg" id="debugImage" onload="console.log('✅ Imagen URL absoluta cargada')" onerror="console.log('❌ Error imagen URL absoluta')">
+        <img src="https://mjtomy.github.io/GraduacionDT/fondo-graduacion.jpg" id="debugImage" onload="console.log('✅ Imagen URL absoluta cargada')" onerror="console.log('❌ Error imagen URL absoluta')">
     </div>
      
      <iframe 
@@ -340,9 +340,10 @@
             // Fuerza la imagen después de cargar
             setTimeout(function() {
                 document.querySelector('.cover').style.backgroundImage = 
-                    "linear-gradient(rgba(13, 92, 77, 0.3), rgba(10, 74, 61, 0.3)), url('https://mjto160.github.io/Graduacion2025/fondo-graduacion.jpg')";
+                    "linear-gradient(rgba(13, 92, 77, 0.3), rgba(10, 74, 61, 0.3)), url('https://mjtomy.github.io/GraduacionDT/fondo-graduacion.jpg')";
             }, 1000);
         });
     </script>
 </body>
 </html>
+
