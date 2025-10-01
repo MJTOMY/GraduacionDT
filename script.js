@@ -78,9 +78,10 @@ document.getElementById('photoUpload').addEventListener('click', function(e) {
     alert('TU IMAGEN HA SIDO ENVIADA POR WHATZAPP!!📲');
 });
 
-// ===== FUNCIONALIDAD DE CÁMARA =====
+// ===== FUNCIONALIDAD DE CÁMARA MEJORADA =====
 let stream = null;
 let capturedImageData = null;
+let currentFacingMode = 'environment'; // Por defecto cámara trasera
 
 const cameraModal = document.getElementById('cameraModal');
 const openCamera = document.getElementById('openCamera');
@@ -93,6 +94,13 @@ const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const capturedImage = document.getElementById('capturedImage');
 
+// Botón para cambiar cámara
+const switchCameraBtn = document.createElement('button');
+switchCameraBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Cambiar Cámara';
+switchCameraBtn.className = 'camera-btn';
+switchCameraBtn.style.display = 'none';
+document.querySelector('.camera-controls').appendChild(switchCameraBtn);
+
 function resetCameraUI() {
     capturedImage.style.display = 'none';
     video.style.display = 'block';
@@ -100,6 +108,7 @@ function resetCameraUI() {
     captureBtn.style.display = 'none';
     retakeBtn.style.display = 'none';
     savePhotoBtn.style.display = 'none';
+    switchCameraBtn.style.display = 'none';
     captureBtn.disabled = true;
 
     if (stream) {
@@ -110,15 +119,81 @@ function resetCameraUI() {
 
 async function startCamera() {
     try {
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
-        });
+        const constraints = {
+            video: { 
+                facingMode: currentFacingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
+        
         startCameraBtn.style.display = 'none';
         captureBtn.style.display = 'flex';
+        switchCameraBtn.style.display = 'flex';
         captureBtn.disabled = false;
+        
+        // Verificar si hay múltiples cámaras disponibles
+        checkAvailableCameras();
+        
     } catch (error) {
-        alert('No se pudo acceder a la cámara. Revisa permisos.');
+        console.error('Error al acceder a la cámara:', error);
+        alert('No se pudo acceder a la cámara. Revisa los permisos de tu navegador.');
+    }
+}
+
+// Función para verificar cámaras disponibles
+async function checkAvailableCameras() {
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        // Si solo hay una cámara, ocultar el botón de cambiar
+        if (videoDevices.length <= 1) {
+            switchCameraBtn.style.display = 'none';
+        } else {
+            switchCameraBtn.style.display = 'flex';
+        }
+    } catch (error) {
+        console.log('No se pudieron enumerar los dispositivos:', error);
+    }
+}
+
+// Función para cambiar entre cámaras
+async function switchCamera() {
+    if (!stream) return;
+    
+    // Detener stream actual
+    stream.getTracks().forEach(track => track.stop());
+    
+    // Cambiar modo de cámara
+    currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+    
+    try {
+        const constraints = {
+            video: { 
+                facingMode: currentFacingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+        
+    } catch (error) {
+        console.error('Error al cambiar cámara:', error);
+        alert('No se pudo cambiar la cámara. Intentando con la cámara por defecto...');
+        
+        // Intentar con cualquier cámara disponible
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+        } catch (fallbackError) {
+            alert('No se pudo acceder a ninguna cámara.');
+        }
     }
 }
 
@@ -126,19 +201,37 @@ function capturePhoto() {
     const context = canvas.getContext('2d');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+    
+    // Si es la cámara frontal, espejar la imagen
+    if (currentFacingMode === 'user') {
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+    }
+    
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Restaurar transformación
+    if (currentFacingMode === 'user') {
+        context.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    
     capturedImageData = canvas.toDataURL('image/png');
     capturedImage.src = capturedImageData;
     capturedImage.style.display = 'block';
     video.style.display = 'none';
     captureBtn.style.display = 'none';
+    switchCameraBtn.style.display = 'none';
     retakeBtn.style.display = 'flex';
     savePhotoBtn.style.display = 'flex';
 }
 
 function retakePhoto() {
-    resetCameraUI();
-    startCamera();
+    capturedImage.style.display = 'none';
+    video.style.display = 'block';
+    captureBtn.style.display = 'flex';
+    switchCameraBtn.style.display = 'flex';
+    retakeBtn.style.display = 'none';
+    savePhotoBtn.style.display = 'none';
 }
 
 // Guardar foto → Enviar por WhatsApp
@@ -151,6 +244,7 @@ async function savePhoto() {
             const mensaje = encodeURIComponent(`¡Hola! Te envío una foto tomada en la graduación 🎉`);
             const numero = '50249867089';
             const whatsappUrl = `https://wa.me/${numero}?text=${mensaje}`;
+            
             window.open(whatsappUrl, '_blank');
             alert("Ahora adjunta la foto en el chat de WhatsApp 📲");
 
@@ -159,25 +253,28 @@ async function savePhoto() {
         } catch (error) {
             alert('Error: ' + error.message);
         } finally {
-            savePhotoBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Foto';
+            savePhotoBtn.innerHTML = '<i class="fas fa-save"></i> Enviar Foto';
             savePhotoBtn.disabled = false;
         }
     }
 }
 
-// Eventos cámara
+// Eventos cámara - ACTUALIZADOS
 openCamera.addEventListener('click', function() {
     cameraModal.classList.add('open');
     resetCameraUI();
 });
+
 closeCamera.addEventListener('click', function() {
     cameraModal.classList.remove('open');
     resetCameraUI();
 });
+
 startCameraBtn.addEventListener('click', startCamera);
 captureBtn.addEventListener('click', capturePhoto);
 retakeBtn.addEventListener('click', retakePhoto);
 savePhotoBtn.addEventListener('click', savePhoto);
+switchCameraBtn.addEventListener('click', switchCamera); // NUEVO EVENTO
 
 window.addEventListener('click', function(e) {
     if (e.target === cameraModal) {
